@@ -64,6 +64,17 @@ function saveEventDataLocally(events) {
   });
 }
 
+function getLocalEventData() {
+  if (!('indexedDB' in window)) {
+    return null;
+  }
+  return dbPromise.then(db => {
+    const tx = db.transaction('events', 'readonly');
+    const store = tx.objectStore('events');
+    return store.getAll();
+  });
+}
+
 loadContentNetworkFirst();
 
 function loadContentNetworkFirst() {
@@ -83,6 +94,14 @@ function loadContentNetworkFirst() {
     .catch(err => {
       // if we can't connect to the server...
       console.log('Network requests have failed, this is expected if offline');
+      getLocalEventData().then(offlineData => {
+        if (!offlineData.length) {
+          messageNoData();
+        } else {
+          messageOffline();
+          updateUI(offlineData);
+        }
+      });
     });
 }
 
