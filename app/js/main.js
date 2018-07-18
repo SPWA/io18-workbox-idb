@@ -20,6 +20,19 @@ const dataSavedMessage = document.getElementById('data-saved');
 const saveErrorMessage = document.getElementById('save-error');
 const addEventButton = document.getElementById('add-event-button');
 
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker
+      .register('/sw.js')
+      .then(registration => {
+        console.log(`Service Worker registered! Scope: ${registration.scope}`);
+      })
+      .catch(err => {
+        console.log(`Service Worker registration failed: ${err}`);
+      });
+  });
+}
+
 addEventButton.addEventListener('click', addAndPostEvent);
 
 Notification.requestPermission();
@@ -30,11 +43,13 @@ loadContentNetworkFirst();
 
 function loadContentNetworkFirst() {
   getServerData()
-  .then(dataFromNetwork => {
-    updateUI(dataFromNetwork);
-  }).catch(err => { // if we can't connect to the server...
-    console.log('Network requests have failed, this is expected if offline');
-  });
+    .then(dataFromNetwork => {
+      updateUI(dataFromNetwork);
+    })
+    .catch(err => {
+      // if we can't connect to the server...
+      console.log('Network requests have failed, this is expected if offline');
+    });
 }
 
 /* Network functions */
@@ -61,7 +76,7 @@ function addAndPostEvent(e) {
 
   // TODO - save event data locally
 
-  const headers = new Headers({'Content-Type': 'application/json'});
+  const headers = new Headers({ 'Content-Type': 'application/json' });
   const body = JSON.stringify(data);
   return fetch('api/add', {
     method: 'POST',
@@ -74,8 +89,7 @@ function addAndPostEvent(e) {
 
 function updateUI(events) {
   events.forEach(event => {
-    const item =
-      `<li class="card">
+    const item = `<li class="card">
          <div class="card-text">
            <h2>${event.title}</h2>
            <h4>${event.date}</h4>
@@ -104,7 +118,9 @@ function messageNoData() {
 function messageDataSaved() {
   // alert user that data has been saved for offline
   const lastUpdated = getLastUpdated();
-  if (lastUpdated) {dataSavedMessage.textContent += ' on ' + lastUpdated;}
+  if (lastUpdated) {
+    dataSavedMessage.textContent += ' on ' + lastUpdated;
+  }
   dataSavedMessage.style.display = 'block';
 }
 
