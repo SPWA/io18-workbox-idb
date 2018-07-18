@@ -75,5 +75,12 @@
     "date": "1233-02-23",
     "city": "Mountain View",
     "note": "Hello, World!"
+  },
+  {
+    "id": 1531885512469,
+    "title": "Coba event baru",
+    "date": "2018-07-13",
+    "city": "Denpasar",
+    "note": "baru"
   }
 ]

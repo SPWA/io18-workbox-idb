@@ -37,7 +37,6 @@ addEventButton.addEventListener('click', addAndPostEvent);
 
 Notification.requestPermission();
 
-// TODO - create indexedDB database
 const dbPromise = createIndexedDB();
 
 function createIndexedDB() {
@@ -51,12 +50,35 @@ function createIndexedDB() {
   });
 }
 
+function saveEventDataLocally(events) {
+  if (!('indexedDB' in window)) {
+    return null;
+  }
+  return dbPromise.then(db => {
+    const tx = db.transaction('events', 'readwrite');
+    const store = tx.objectStore('events');
+    return Promise.all(events.map(event => store.put(event))).catch(() => {
+      tx.abort();
+      throw Error('Events were not added to the store');
+    });
+  });
+}
+
 loadContentNetworkFirst();
 
 function loadContentNetworkFirst() {
   getServerData()
     .then(dataFromNetwork => {
       updateUI(dataFromNetwork);
+      saveEventDataLocally(dataFromNetwork)
+        .then(() => {
+          setLastUpdated(new Date());
+          messageDataSaved();
+        })
+        .catch(err => {
+          messageSaveError();
+          console.warn(err);
+        });
     })
     .catch(err => {
       // if we can't connect to the server...
@@ -86,7 +108,7 @@ function addAndPostEvent(e) {
   };
   updateUI([data]);
 
-  // TODO - save event data locally
+  saveEventDataLocally([data]);
 
   const headers = new Headers({ 'Content-Type': 'application/json' });
   const body = JSON.stringify(data);
